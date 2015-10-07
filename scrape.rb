@@ -1,6 +1,7 @@
-require 'net/http'
-require 'cgi'
 require 'dotenv'
+require 'byebug'
+require 'open-uri'
+
 Dotenv.load
 
 class Scraping
@@ -12,16 +13,9 @@ class Scraping
 
   def promote_codes
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/promo_codes")
-
-    http = Net::HTTP.new uri.host, uri.port
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
-    request = Net::HTTP::Get.new uri.request_uri
-    cookie = CGI::Cookie.new 'remember_user_token', @remember_user_token
-    request['Cookie'] = cookie.to_s
-    res = http.request request
-    print res.body
+    cookie = { remember_user_token: @remember_user_token }
+    cookie_str = cookie.map { |x| x.join('=') }.join(';')
+    open(uri, { 'Cookie' => cookie_str }) { |f| print f.read }
   end
 end
 
