@@ -1,6 +1,7 @@
 require 'dotenv'
 require 'byebug'
 require 'open-uri'
+require 'oga'
 
 Dotenv.load
 
@@ -13,9 +14,15 @@ class Scraping
 
   def promote_codes
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/promo_codes")
+    html = open(uri, { 'Cookie' => req_cookie }) do |f|
+      Oga.parse_html f.read
+    end
+    html.xpath('//div[@class="span9"]/table/tr/td[1]').map { |elem| elem.text }
+  end
+
+  def req_cookie
     cookie = { remember_user_token: @remember_user_token }
-    cookie_str = cookie.map { |x| x.join('=') }.join(';')
-    open(uri, { 'Cookie' => cookie_str }) { |f| print f.read }
+    cookie.map { |x| x.join('=') }.join(';')
   end
 end
 
