@@ -29,6 +29,8 @@ class Scraping
     html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
   end
 
+  private
+
   def req_cookie
     cookie = { remember_user_token: @remember_user_token }
     cookie.map { |x| x.join('=') }.join(';')
