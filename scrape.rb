@@ -14,17 +14,13 @@ class Scraping
 
   def promote_codes
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/promo_codes")
-    html = open(uri, { 'Cookie' => req_cookie }) do |f|
-      Oga.parse_html f.read
-    end
+    html = read_html uri
     html.xpath('//div[@class="span9"]/table/tr/td[1]').map { |x| x.text }
   end
 
   def participants
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/tickets")
-    html = open(uri, { 'Cookie' => req_cookie }) do |f|
-      Oga.parse_html f.read
-    end
+    html = read_html uri
     # TODO: fix correct xpath
     html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
   end
@@ -34,6 +30,12 @@ class Scraping
   def req_cookie
     cookie = { remember_user_token: @remember_user_token }
     cookie.map { |x| x.join('=') }.join(';')
+  end
+
+  def read_html(uri)
+    open(uri, { 'Cookie' => req_cookie }) do |f|
+      Oga.parse_html f.read
+    end
   end
 end
 
