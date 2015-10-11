@@ -15,7 +15,7 @@ class Scraping
   def promote_codes
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/promo_codes")
     html = read_html uri
-    html.xpath('//div[@class="span9"]/table/tr/td[1]').map { |x| x.text }
+    html.xpath('//div[@class="span9"]/table/tr/td[1]').map(&:text)
   end
 
   def participants
