@@ -17,7 +17,7 @@ class Scraping
     html = open(uri, { 'Cookie' => req_cookie }) do |f|
       Oga.parse_html f.read
     end
-    html.xpath('//div[@class="span9"]/table/tr/td[1]').map(&:text)
+    html.xpath('//div[@class="span9"]/table/tr/td[1]').map { |x| x.text }
   end
 
   def participants
