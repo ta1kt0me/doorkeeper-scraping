@@ -6,6 +6,8 @@ require 'oga'
 Dotenv.load
 
 class Scraping
+  Participant = Struct.new(:id, :name, :email, :coupon, :payment)
+
   def initialize
     @remember_user_token = ENV['REMEMBER_USER_TOKEN']
     @group = ENV['GROUP_NAME']
@@ -22,7 +24,13 @@ class Scraping
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/tickets")
     html = read_html uri
     # TODO: fix correct xpath
-    html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    ids      = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    names    = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    emails   = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    coupons  = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    payments = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+
+    ids.each_with_index { |id, i| Participant.new id, names[i], emails[i], coupons[i], payments[i] }
   end
 
   private
