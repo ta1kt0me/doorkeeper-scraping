@@ -7,6 +7,7 @@ Dotenv.load
 
 class Scraping
   Participant = Struct.new(:id, :name, :email, :coupon, :payment)
+  Ticket      = Struct.new(:type, :payment)
 
   def initialize
     @remember_user_token = ENV['REMEMBER_USER_TOKEN']
@@ -24,11 +25,12 @@ class Scraping
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/tickets")
     html = read_html uri
     # TODO: fix correct xpath
-    ids      = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
-    names    = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
-    emails   = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    byebug
+    ids      = html.xpath('//div[@id="attending"]//td[@class="sc"]').map { |e| e.text.strip }
+    names    = html.xpath('//div[@id="attending"]//div[@class="user-name"]').map { |e| e.text.strip }
+    emails   = html.xpath('//div[@id="attending"]//div[@class="user-email"]').map { |e| e.text.strip }
     coupons  = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
-    payments = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    payments = parse_ticket html.xpath('//div[@id="attending"]//td[@class="no-ellipsis smaller"]').map { |e| e.text.strip }
 
     ids.each_with_index { |id, i| Participant.new id, names[i], emails[i], coupons[i], payments[i] }
   end
@@ -45,8 +47,15 @@ class Scraping
       Oga.parse_html f.read
     end
   end
+
+  def parse_ticket(list)
+    list.each do |e|
+      type, payment = e.gsub(/\(/, ':').delete(')').split(/:/)
+      Ticket.new type, payment
+    end
+  end
 end
 
 s = Scraping.new
-s.promote_codes
+# s.promote_codes
 s.participants
