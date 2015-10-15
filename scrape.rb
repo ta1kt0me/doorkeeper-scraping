@@ -6,7 +6,7 @@ require 'oga'
 Dotenv.load
 
 class Scraping
-  Participant = Struct.new(:id, :name, :email, :coupon, :payment)
+  Participant = Struct.new(:id, :name, :email, :coupon, :type, :payment)
   Ticket      = Struct.new(:type, :payment)
 
   def initialize
@@ -31,7 +31,8 @@ class Scraping
     # coupons  = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
     coupons  = []
     payments = parse_ticket(html.xpath('//div[@id="attending"]//td[@class="no-ellipsis smaller"]').map { |e| e.text.strip })
-    participants = ids.each_with_index.map { |id, i| Participant.new id, names[i], emails[i], coupons[i], payments[i] }
+    participants = ids.each_with_index.map { |id, i| Participant.new id, names[i], emails[i], coupons[i], payments[i][:type], payments[i][:payment] }
+    byebug
   end
 
   private
@@ -49,7 +50,7 @@ class Scraping
 
   def parse_ticket(list)
     list.map do |e|
-      type, payment = e.gsub(/\(/, ':').delete(')').split(/:/)
+      type, payment = e.gsub(/\(/, ':').delete(')').split(/:/).map(&:strip)
       Ticket.new type, payment
     end
   end
