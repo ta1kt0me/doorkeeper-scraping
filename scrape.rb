@@ -25,14 +25,13 @@ class Scraping
     uri = URI("https://manage.doorkeeper.jp/groups/#{@group}/events/#{@event}/tickets")
     html = read_html uri
     # TODO: fix correct xpath
-    byebug
     ids      = html.xpath('//div[@id="attending"]//td[@class="sc"]').map { |e| e.text.strip }
     names    = html.xpath('//div[@id="attending"]//div[@class="user-name"]').map { |e| e.text.strip }
     emails   = html.xpath('//div[@id="attending"]//div[@class="user-email"]').map { |e| e.text.strip }
-    coupons  = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
-    payments = parse_ticket html.xpath('//div[@id="attending"]//td[@class="no-ellipsis smaller"]').map { |e| e.text.strip }
-
-    ids.each_with_index { |id, i| Participant.new id, names[i], emails[i], coupons[i], payments[i] }
+    # coupons  = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
+    coupons  = []
+    payments = parse_ticket(html.xpath('//div[@id="attending"]//td[@class="no-ellipsis smaller"]').map { |e| e.text.strip })
+    participants = ids.each_with_index.map { |id, i| Participant.new id, names[i], emails[i], coupons[i], payments[i] }
   end
 
   private
@@ -49,7 +48,7 @@ class Scraping
   end
 
   def parse_ticket(list)
-    list.each do |e|
+    list.map do |e|
       type, payment = e.gsub(/\(/, ':').delete(')').split(/:/)
       Ticket.new type, payment
     end
