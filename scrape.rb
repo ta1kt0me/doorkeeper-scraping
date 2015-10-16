@@ -28,11 +28,14 @@ class Scraping
     ids      = html.xpath('//div[@id="attending"]//td[@class="sc"]').map { |e| e.text.strip }
     names    = html.xpath('//div[@id="attending"]//div[@class="user-name"]').map { |e| e.text.strip }
     emails   = html.xpath('//div[@id="attending"]//div[@class="user-email"]').map { |e| e.text.strip }
-    # coupons  = html.xpath('//div[@class="span12"]/table/tr[@role="row"]').map(&:text)
-    coupons  = []
+    tr_ids   = html.xpath('//div[@id="attending"]//tbody//tr').attribute('id')
+    coupons  = tr_ids.reduce([]) do |list, id|
+      title = html.xpath("//tr[@id='#{id}']//span[@class='popupHelp']").attribute('title')
+      list << (title.empty? ? nil : title.first.value.split(': ').last)
+      list
+    end
     payments = parse_ticket(html.xpath('//div[@id="attending"]//td[@class="no-ellipsis smaller"]').map { |e| e.text.strip })
     participants = ids.each_with_index.map { |id, i| Participant.new id, names[i], emails[i], coupons[i], payments[i][:type], payments[i][:payment] }
-    byebug
   end
 
   private
@@ -59,3 +62,4 @@ end
 s = Scraping.new
 # s.promote_codes
 s.participants
+# s.participants.map { |e| e.coupon.nil? ? nil : e }.compact.group_by(&:coupon).reduce({}) { |h, e| h[e.key] = e.value.count }
